@@ -268,6 +268,47 @@ files = [
 ]
 
 [[package]]
+name = "diptest"
+version = "0.8.2"
+description = "Hartigan's diptest."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "diptest-0.8.2-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:2828546ae777164e445be41115e328a340b93be296cfcbf65e81bca85d50daf3"},
+    {file = "diptest-0.8.2-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:843bb71169853bb9ce2a143162f2c116be926733b3677c79122fd6528261fb3a"},
+    {file = "diptest-0.8.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c678e57a8d088515d24e08d14d7f2e255621a632b8d71e51e8cf9ba07d317850"},
+    {file = "diptest-0.8.2-cp310-cp310-win_amd64.whl", hash = "sha256:21f88823957e0c0a1d11e98966086b20aefddbcb14aade8cd5b0d49dacd9c007"},
+    {file = "diptest-0.8.2-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:5e5de6100200b83d73a5d6c34aacdadc664af62d23997cb9bf9df2eb7a7293a3"},
+    {file = "diptest-0.8.2-cp311-cp311-macosx_12_0_x86_64.whl", hash = "sha256:bc9b5490c54180d8b1cb3746fdfb1a64289f0a6d09ec30b2ea30e1b8256430d0"},
+    {file = "diptest-0.8.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f6563ebaadf12b39b296ea6f9bac9a764aefb4ca89cee57090b7dfbf47762ef3"},
+    {file = "diptest-0.8.2-cp311-cp311-win_amd64.whl", hash = "sha256:391268f259a8a9b2f2491f1c479734194baed232e6692c58c1557b4bbceb0414"},
+    {file = "diptest-0.8.2-cp312-cp312-macosx_12_0_arm64.whl", hash = "sha256:c183cd3ed98faa7e0d19584812ade27735a4d83bcbf95fd31bd0accb3f1213d4"},
+    {file = "diptest-0.8.2-cp312-cp312-macosx_12_0_x86_64.whl", hash = "sha256:c75c83c513f95e591eca0476f9c12b42a5704a639919815e174eb7c8b933f61f"},
+    {file = "diptest-0.8.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fcaea621601385794a43d62172802efbed5c4883606a9133a797a6c6ed1cbd52"},
+    {file = "diptest-0.8.2-cp312-cp312-win_amd64.whl", hash = "sha256:70319bdb076e91832b8770e8c90d4e846fa25bc8586f5170b09352d280559f0e"},
+    {file = "diptest-0.8.2-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:c0d317a933edcfd462ec013c813b9cbc93a30348a43dbb96c5d3e8ad88b940a7"},
+    {file = "diptest-0.8.2-cp313-cp313-macosx_12_0_x86_64.whl", hash = "sha256:76300d0dc54f810db42414971d6300acbd252746bd6cbd754dcccfe4722a3a98"},
+    {file = "diptest-0.8.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:df630bad930caac937ef704844822fffca6b9b99f203655b03362373840294b5"},
+    {file = "diptest-0.8.2-cp313-cp313-win_amd64.whl", hash = "sha256:cfd4eed8da7fcf2828e175203d39ce5ea1c6405f57cdbe0e77fde7d43a589c51"},
+    {file = "diptest-0.8.2-cp38-cp38-macosx_12_0_arm64.whl", hash = "sha256:a0794bb9e6747e6301b74fd08b1e0a8a460ddc7834faa73e9162f6e720e5ef2f"},
+    {file = "diptest-0.8.2-cp38-cp38-macosx_12_0_x86_64.whl", hash = "sha256:322dda9040e50590cec62ab833a9fd031bdfc778f0d75cb5c4525d7c01e6fb15"},
+    {file = "diptest-0.8.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c319edd7800bfbb3cdf8e9cbb1b2b087bda5f264fdbe1a79deb04eb54306e2e0"},
+    {file = "diptest-0.8.2-cp38-cp38-win_amd64.whl", hash = "sha256:0436584957fa5b2b022766a43a794e2f1e9dfa9851d517cf5b98f061a3067e63"},
+    {file = "diptest-0.8.2-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:884dec60bb0968ba2f5e29d7ea3198403cefc39ec3f1af07ddc88efe978a419c"},
+    {file = "diptest-0.8.2-cp39-cp39-macosx_12_0_x86_64.whl", hash = "sha256:ffc5d0669ea30c1762933540b34b1ebc17bb885e049abff0ef57d5de55bfdef2"},
+    {file = "diptest-0.8.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6340a70f34df3f09eab39557fe1c51bb709862e3480251c3887e97c01ef77d67"},
+    {file = "diptest-0.8.2-cp39-cp39-win_amd64.whl", hash = "sha256:b5b4ba9b9d0d5666c734701944beedf80f4ea5fed55f6020ebadf34784ddacbe"},
+    {file = "diptest-0.8.2.tar.gz", hash = "sha256:ecdbd48dd7c08c1b96bd2064d7464e848a5dd7e011e651937a5800a99c3c20d8"},
+]
+
+[package.dependencies]
+numpy = ">=1.18"
+psutil = "*"
+
+[package.extras]
+test = ["pytest"]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.2"
 description = "Backport of PEP 654 (exception groups)"
@@ -403,13 +444,13 @@ test = ["flaky", "ipyparallel", "pre-commit", "pytest (>=7.0)", "pytest-asyncio 
 
 [[package]]
 name = "ipython"
-version = "8.33.0"
+version = "8.34.0"
 description = "IPython: Productive Interactive Computing"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "ipython-8.33.0-py3-none-any.whl", hash = "sha256:aa5b301dfe1eaf0167ff3238a6825f810a029c9dad9d3f1597f30bd5ff65cc44"},
-    {file = "ipython-8.33.0.tar.gz", hash = "sha256:4c3e36a6dfa9e8e3702bd46f3df668624c975a22ff340e96ea7277afbd76217d"},
+    {file = "ipython-8.34.0-py3-none-any.whl", hash = "sha256:0419883fa46e0baa182c5d50ebb8d6b49df1889fdb70750ad6d8cfe678eda6e3"},
+    {file = "ipython-8.34.0.tar.gz", hash = "sha256:c31d658e754673ecc6514583e7dda8069e47136eb62458816b7d1e6625948b5a"},
 ]
 
 [package.dependencies]
@@ -1115,29 +1156,27 @@ files = [
 
 [[package]]
 name = "pywin32"
-version = "308"
+version = "309"
 description = "Python for Window Extensions"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pywin32-308-cp310-cp310-win32.whl", hash = "sha256:796ff4426437896550d2981b9c2ac0ffd75238ad9ea2d3bfa67a1abd546d262e"},
-    {file = "pywin32-308-cp310-cp310-win_amd64.whl", hash = "sha256:4fc888c59b3c0bef905ce7eb7e2106a07712015ea1c8234b703a088d46110e8e"},
-    {file = "pywin32-308-cp310-cp310-win_arm64.whl", hash = "sha256:a5ab5381813b40f264fa3495b98af850098f814a25a63589a8e9eb12560f450c"},
-    {file = "pywin32-308-cp311-cp311-win32.whl", hash = "sha256:5d8c8015b24a7d6855b1550d8e660d8daa09983c80e5daf89a273e5c6fb5095a"},
-    {file = "pywin32-308-cp311-cp311-win_amd64.whl", hash = "sha256:575621b90f0dc2695fec346b2d6302faebd4f0f45c05ea29404cefe35d89442b"},
-    {file = "pywin32-308-cp311-cp311-win_arm64.whl", hash = "sha256:100a5442b7332070983c4cd03f2e906a5648a5104b8a7f50175f7906efd16bb6"},
-    {file = "pywin32-308-cp312-cp312-win32.whl", hash = "sha256:587f3e19696f4bf96fde9d8a57cec74a57021ad5f204c9e627e15c33ff568897"},
-    {file = "pywin32-308-cp312-cp312-win_amd64.whl", hash = "sha256:00b3e11ef09ede56c6a43c71f2d31857cf7c54b0ab6e78ac659497abd2834f47"},
-    {file = "pywin32-308-cp312-cp312-win_arm64.whl", hash = "sha256:9b4de86c8d909aed15b7011182c8cab38c8850de36e6afb1f0db22b8959e3091"},
-    {file = "pywin32-308-cp313-cp313-win32.whl", hash = "sha256:1c44539a37a5b7b21d02ab34e6a4d314e0788f1690d65b48e9b0b89f31abbbed"},
-    {file = "pywin32-308-cp313-cp313-win_amd64.whl", hash = "sha256:fd380990e792eaf6827fcb7e187b2b4b1cede0585e3d0c9e84201ec27b9905e4"},
-    {file = "pywin32-308-cp313-cp313-win_arm64.whl", hash = "sha256:ef313c46d4c18dfb82a2431e3051ac8f112ccee1a34f29c263c583c568db63cd"},
-    {file = "pywin32-308-cp37-cp37m-win32.whl", hash = "sha256:1f696ab352a2ddd63bd07430080dd598e6369152ea13a25ebcdd2f503a38f1ff"},
-    {file = "pywin32-308-cp37-cp37m-win_amd64.whl", hash = "sha256:13dcb914ed4347019fbec6697a01a0aec61019c1046c2b905410d197856326a6"},
-    {file = "pywin32-308-cp38-cp38-win32.whl", hash = "sha256:5794e764ebcabf4ff08c555b31bd348c9025929371763b2183172ff4708152f0"},
-    {file = "pywin32-308-cp38-cp38-win_amd64.whl", hash = "sha256:3b92622e29d651c6b783e368ba7d6722b1634b8e70bd376fd7610fe1992e19de"},
-    {file = "pywin32-308-cp39-cp39-win32.whl", hash = "sha256:7873ca4dc60ab3287919881a7d4f88baee4a6e639aa6962de25a98ba6b193341"},
-    {file = "pywin32-308-cp39-cp39-win_amd64.whl", hash = "sha256:71b3322d949b4cc20776436a9c9ba0eeedcbc9c650daa536df63f0ff111bb920"},
+    {file = "pywin32-309-cp310-cp310-win32.whl", hash = "sha256:5b78d98550ca093a6fe7ab6d71733fbc886e2af9d4876d935e7f6e1cd6577ac9"},
+    {file = "pywin32-309-cp310-cp310-win_amd64.whl", hash = "sha256:728d08046f3d65b90d4c77f71b6fbb551699e2005cc31bbffd1febd6a08aa698"},
+    {file = "pywin32-309-cp310-cp310-win_arm64.whl", hash = "sha256:c667bcc0a1e6acaca8984eb3e2b6e42696fc035015f99ff8bc6c3db4c09a466a"},
+    {file = "pywin32-309-cp311-cp311-win32.whl", hash = "sha256:d5df6faa32b868baf9ade7c9b25337fa5eced28eb1ab89082c8dae9c48e4cd51"},
+    {file = "pywin32-309-cp311-cp311-win_amd64.whl", hash = "sha256:e7ec2cef6df0926f8a89fd64959eba591a1eeaf0258082065f7bdbe2121228db"},
+    {file = "pywin32-309-cp311-cp311-win_arm64.whl", hash = "sha256:54ee296f6d11db1627216e9b4d4c3231856ed2d9f194c82f26c6cb5650163f4c"},
+    {file = "pywin32-309-cp312-cp312-win32.whl", hash = "sha256:de9acacced5fa82f557298b1fed5fef7bd49beee04190f68e1e4783fbdc19926"},
+    {file = "pywin32-309-cp312-cp312-win_amd64.whl", hash = "sha256:6ff9eebb77ffc3d59812c68db33c0a7817e1337e3537859499bd27586330fc9e"},
+    {file = "pywin32-309-cp312-cp312-win_arm64.whl", hash = "sha256:619f3e0a327b5418d833f44dc87859523635cf339f86071cc65a13c07be3110f"},
+    {file = "pywin32-309-cp313-cp313-win32.whl", hash = "sha256:008bffd4afd6de8ca46c6486085414cc898263a21a63c7f860d54c9d02b45c8d"},
+    {file = "pywin32-309-cp313-cp313-win_amd64.whl", hash = "sha256:bd0724f58492db4cbfbeb1fcd606495205aa119370c0ddc4f70e5771a3ab768d"},
+    {file = "pywin32-309-cp313-cp313-win_arm64.whl", hash = "sha256:8fd9669cfd41863b688a1bc9b1d4d2d76fd4ba2128be50a70b0ea66b8d37953b"},
+    {file = "pywin32-309-cp38-cp38-win32.whl", hash = "sha256:617b837dc5d9dfa7e156dbfa7d3906c009a2881849a80a9ae7519f3dd8c6cb86"},
+    {file = "pywin32-309-cp38-cp38-win_amd64.whl", hash = "sha256:0be3071f555480fbfd86a816a1a773880ee655bf186aa2931860dbb44e8424f8"},
+    {file = "pywin32-309-cp39-cp39-win32.whl", hash = "sha256:72ae9ae3a7a6473223589a1621f9001fe802d59ed227fd6a8503c9af67c1d5f4"},
+    {file = "pywin32-309-cp39-cp39-win_amd64.whl", hash = "sha256:88bc06d6a9feac70783de64089324568ecbc65866e2ab318eab35da3811fd7ef"},
 ]
 
 [[package]]
@@ -1562,4 +1601,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "aed6714894a4f99cf45300573164d04c134325abddd6de8f77aa595ccd0bdc2d"
+content-hash = "7d5da3a686aad3191ed4fc01e635c76080dab40ed652294c133c1bce80f6f85d"
