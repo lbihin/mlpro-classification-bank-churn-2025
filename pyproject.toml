@@ -23,6 +23,7 @@ seaborn = "^0.13.2"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
+black = {extras = ["jupyter"], version = "^25.1.0"}
 
 [build-system]
 requires = ["poetry-core"]
