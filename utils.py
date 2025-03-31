@@ -91,8 +91,9 @@ def check_normality(data, alpha=0.02):
         print("The data is not normally distributed (reject H0).")
         return False
 
+
 def describe_distribution(data: pd.DataFrame, name: str):
-    fig, ax = plt.subplots(2, 1, figsize=(12,5))
+    fig, ax = plt.subplots(2, 1, figsize=(12, 5))
     plt.suptitle(f"Répartition de la variable '{name}'")
     sns.histplot(data=data, x=name, ax=ax[0])
     sns.boxplot(data=data, x=name, ax=ax[1])
