@@ -1,13 +1,14 @@
 # General
 import logging
+import pickle
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-from scipy.stats import skew, kurtosis
 import seaborn as sns
 from matplotlib import pyplot as plt
-from scipy.stats import anderson, kstest, shapiro
+from scipy.stats import anderson, kstest, kurtosis, shapiro, skew
 
 RANDOM_STATE = 0
 TEST_SIZE = 0.2
@@ -92,7 +93,7 @@ def check_normality(data, alpha=0.02):
         return False
 
 
-def describe_distribution(data: pd.DataFrame, name: str):
+def describe_distribution(data: pd.DataFrame, name: str, hue=False):
     fig, ax = plt.subplots(2, 1, figsize=(12, 5))
     plt.suptitle(f"Répartition de la variable '{name}'")
     sns.histplot(data=data, x=name, ax=ax[0])
@@ -108,3 +109,16 @@ def describe_distribution(data: pd.DataFrame, name: str):
     print(desc)
     print(f"Skewness: {skewness}")
     print(f"Kurtosis: {kurt}")
+
+
+def sauvegarder_model(model, file_name: str = "../data/models/best-model", timestamp=None):
+    with open(f"{file_name}-{str(timestamp)}.pkl", "wb") as f:
+        pickle.dump(model, f)
+    with open(f"{file_name}-latest.pkl", "wb") as f:
+        pickle.dump(model, f)
+
+
+def ouvrir_model(file_name: str = "../data/models/best-model-latest.pkl"):
+    with open(file_name, "rb") as f:
+        clf = pickle.load(f)
+    return clf
