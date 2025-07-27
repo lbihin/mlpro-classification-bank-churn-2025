@@ -5,22 +5,22 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.metrics import f1_score
 
 
+import numpy as np
+import pandas as pd
+from scipy.optimize import minimize
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.metrics import f1_score
+
+
 class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
     def __init__(
         self,
-        threshold=0.5,
+        threshold=1.0,
         countries="all",
-        optimize_threshold=False,
+        optimize_threshold=True,
         optimizer="Nelder-Mead",
         verbose=False,
     ):
-        """
-        threshold : seuil utilisé pour calculer le F1 pendant l'optimisation (0.5 par défaut)
-        countries : 'all' ou liste de pays à traiter
-        optimize_threshold : si True, cherche le meilleur seuil par pays après optimisation des poids
-        optimizer : méthode scipy.optimize (Nelder-Mead ou Powell recommandé)
-        verbose : affiche la progression lors du fit
-        """
         self.threshold = threshold
         self.countries = countries
         self.optimize_threshold = optimize_threshold
@@ -28,14 +28,14 @@ class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
         self.verbose = verbose
         self.weights_by_country_ = {}
         self.threshold_by_country_ = {}
+        self.max_age_ = None  # pour normalisation
 
     def _compute_score(self, X, weights, country):
-        """Calcule les probabilités de churn pour tout X avec des poids donnés."""
         w_age, w_num_products, w_active, w_has_balance, w_geography = weights
 
         has_balance = (X["Balance"] > 0).astype(int)
         geography_match = (X["Geography"].astype(str) == country).astype(int)
-        age_norm = (X["Age"] - 18) / (X["Age"].max() - 18)
+        age_norm = (X["Age"] - 18) / (self.max_age_ - 18)
 
         score = (
             w_age * age_norm
@@ -47,28 +47,20 @@ class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
 
         return 1 / (1 + np.exp(-score))
 
-    def _objective(self, weights, X, y, country):
-        """Objectif : maximiser F1 (minimiser -F1) pour un pays donné."""
+    def _objective(self, params, X, y, country):
+        weights = params[:-1]
+        threshold = np.clip(params[-1], 0.1, 0.9)  # contrainte
+
         prob = self._compute_score(X, weights, country)
-        preds = (prob >= self.threshold).astype(int)
+        preds = (prob >= threshold).astype(int)
         return -f1_score(y, preds)
 
-    def _find_best_threshold(self, prob, y):
-        """Cherche le meilleur seuil F1 sur la probabilité donnée."""
-        thresholds = np.linspace(0.1, 0.9, 17)  # 0.1 → 0.9 par pas de 0.05
-        best_f1, best_thresh = 0, 0.5
-        for t in thresholds:
-            f1 = f1_score(y, (prob >= t).astype(int))
-            if f1 > best_f1:
-                best_f1, best_thresh = f1, t
-        return best_thresh
-
-    def fit(self, X, y):
-        # Convert Geography en string pour éviter bugs de type
+    def fit(self, X: pd.DataFrame, y: pd.Series):
         X = X.copy()
         X["Geography"] = X["Geography"].astype(str)
 
-        # Déterminer pays à traiter
+        self.max_age_ = X["Age"].max()
+
         countries_to_fit = (
             X["Geography"].unique() if self.countries == "all" else self.countries
         )
@@ -79,56 +71,64 @@ class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
 
             if len(X_country) == 0:
                 if self.verbose:
-                    print(
-                        f"[WARN] Aucun échantillon pour {country}, poids par défaut appliqués."
-                    )
-                self.weights_by_country_[country] = [0, 0, 0, 0, 0]
-                self.threshold_by_country_[country] = 0.5
+                    print(f"[WARN] Aucun échantillon pour {country}, poids par défaut appliqués.")
+                self.weights_by_country_[country] = [1, 1, 1, 1, 1]
+                self.threshold_by_country_[country] = self.threshold
                 continue
 
-            # Initialisation et optimisation des poids
-            init_weights = [0.4, -0.6, -0.5, 0.3, 0.2]
-            res = minimize(
-                self._objective,
-                init_weights,
-                args=(X_country, y_country, country),
-                method=self.optimizer,
-                options={"maxiter": 200},
-            )
+            init_params = [0.4, -0.6, -0.5, 0.3, 0.2, self.threshold]
 
-            self.weights_by_country_[country] = res.x
-
-            # Optimiser le seuil F1 si demandé
             if self.optimize_threshold:
-                prob = self._compute_score(X_country, res.x, country)
-                best_thresh = self._find_best_threshold(prob, y_country)
-                self.threshold_by_country_[country] = best_thresh
+                res = minimize(
+                    self._objective,
+                    init_params,
+                    args=(X_country, y_country, country),
+                    method=self.optimizer,
+                    options={"maxiter": 300},
+                )
+                weights = res.x[:-1]
+                threshold = np.clip(res.x[-1], 0.1, 0.9)
             else:
-                self.threshold_by_country_[country] = self.threshold
+                # Seuil fixe : on n’optimise que les poids
+                def fixed_threshold_objective(w):
+                    return self._objective(np.append(w, self.threshold), X_country, y_country, country)
+
+                res = minimize(
+                    fixed_threshold_objective,
+                    init_params[:-1],
+                    method=self.optimizer,
+                    options={"maxiter": 300},
+                )
+                weights = res.x
+                threshold = self.threshold
+
+            self.weights_by_country_[country] = weights
+            self.threshold_by_country_[country] = threshold
 
             if self.verbose:
-                print(
-                    f"[{country}] Weights={res.x}, Threshold={self.threshold_by_country_[country]:.2f}"
-                )
+                print(f"[{country}] Weights={weights}, Threshold={threshold:.2f}")
 
         return self
 
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame):
         if not self.weights_by_country_:
             raise ValueError("Le transformeur doit être fit() avant transform().")
 
         X_out = X.copy()
         X_out["Geography"] = X_out["Geography"].astype(str)
+
+        # Vérifier pays non vus
+        unknown_countries = set(X_out["Geography"].unique()) - set(self.weights_by_country_.keys())
+        if unknown_countries:
+            raise ValueError(f"Pays inconnus détectés pendant transform : {unknown_countries}")
+
         churn_scores = np.zeros(len(X_out))
 
-        # Vectorisation : calcul score pays par pays
         for country, weights in self.weights_by_country_.items():
             mask = X_out["Geography"] == country
             churn_scores[mask] = self._compute_score(X_out[mask], weights, country)
 
-        return pd.DataFrame(data={"churn_score": churn_scores}, index=X_out.index)
-        X_out["churn_score"] = churn_scores
-        return X_out
+        return pd.DataFrame({"churn_score": churn_scores}, index=X_out.index)
 
 
 class GenerateBinaryFeatures(BaseEstimator, TransformerMixin):
