@@ -5,13 +5,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.metrics import f1_score
 
 
-import numpy as np
-import pandas as pd
-from scipy.optimize import minimize
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.metrics import f1_score
-
-
 class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
     def __init__(
         self,
@@ -26,7 +19,11 @@ class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
         self.optimize_threshold = optimize_threshold
         self.optimizer = optimizer
         self.verbose = verbose
-        self.weights_by_country_ = {}
+        self.weights_by_country_ = {
+            "France": [0.50512678, -0.09958729, -0.62135048, 0.40087766, 0.2104039],
+            "Spain": [0.53319479, -0.09586698, -0.56027375, 0.4197214, 0.1958134],
+            "Germany": [0.408, -0.57, -0.51, 0.306, 0.204],
+        }
         self.threshold_by_country_ = {}
         self.max_age_ = None  # pour normalisation
 
@@ -71,12 +68,15 @@ class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
 
             if len(X_country) == 0:
                 if self.verbose:
-                    print(f"[WARN] Aucun échantillon pour {country}, poids par défaut appliqués.")
+                    print(
+                        f"[WARN] Aucun échantillon pour {country}, poids par défaut appliqués."
+                    )
                 self.weights_by_country_[country] = [1, 1, 1, 1, 1]
                 self.threshold_by_country_[country] = self.threshold
                 continue
 
-            init_params = [0.4, -0.6, -0.5, 0.3, 0.2, self.threshold]
+            # init_params = [0.4, -0.6, -0.5, 0.3, 0.2, self.threshold]
+            init_params = [*self.weights_by_country_.get(country, []), self.threshold]
 
             if self.optimize_threshold:
                 res = minimize(
@@ -91,7 +91,9 @@ class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
             else:
                 # Seuil fixe : on n’optimise que les poids
                 def fixed_threshold_objective(w):
-                    return self._objective(np.append(w, self.threshold), X_country, y_country, country)
+                    return self._objective(
+                        np.append(w, self.threshold), X_country, y_country, country
+                    )
 
                 res = minimize(
                     fixed_threshold_objective,
@@ -118,9 +120,13 @@ class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
         X_out["Geography"] = X_out["Geography"].astype(str)
 
         # Vérifier pays non vus
-        unknown_countries = set(X_out["Geography"].unique()) - set(self.weights_by_country_.keys())
+        unknown_countries = set(X_out["Geography"].unique()) - set(
+            self.weights_by_country_.keys()
+        )
         if unknown_countries:
-            raise ValueError(f"Pays inconnus détectés pendant transform : {unknown_countries}")
+            raise ValueError(
+                f"Pays inconnus détectés pendant transform : {unknown_countries}"
+            )
 
         churn_scores = np.zeros(len(X_out))
 
