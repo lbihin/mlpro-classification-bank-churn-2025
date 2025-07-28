@@ -111,9 +111,10 @@ def describe_distribution(data: pd.DataFrame, name: str, hue=False):
     print(f"Kurtosis: {kurt}")
 
 
-def sauvegarder_model(model, file_name: str = "../data/models/best-model", timestamp=None):
-    with open(f"{file_name}-{str(timestamp)}.pkl", "wb") as f:
-        pickle.dump(model, f)
+def sauvegarder_model(model, file_name: str = "../data/models/best-model", timestamp=None, only_latest:bool= False):
+    if not only_latest:
+        with open(f"{file_name}-{str(timestamp)}.pkl", "wb") as f:
+            pickle.dump(model, f)
     with open(f"{file_name}-latest.pkl", "wb") as f:
         pickle.dump(model, f)
 
