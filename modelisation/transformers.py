@@ -137,68 +137,30 @@ class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
         return pd.DataFrame({"churn_score": churn_scores}, index=X_out.index)
 
 
-class GenerateBinaryFeatures(BaseEstimator, TransformerMixin):
-    def __init__(
-        self,
-        percentiles=[25, 50, 75],
-        young_high_credit_score_pairs=[(20, 700), (35, 700), (50, 700)],
-    ):
-        self.percentiles = percentiles
-        self.young_high_credit_score_pairs = young_high_credit_score_pairs
-        self.ages = [20, 35, 50]
+class ChurnFeature(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
-        # Calculer les percentiles pour CreditScore
-        self.credit_score_percentile = np.percentile(X["CreditScore"], self.percentiles)
-        self.balance_percentile = np.percentile(X["Balance"], self.percentiles)
-        self.num_products = X.NumOfProducts.unique()
         return self
 
     def transform(self, X, y=None):
-        new_features = {}
-        # Générer les colonnes binaires pour chaque percentile
-        new_features.update(
-            {
-                f"IsZeroBalance_{percentile}pCreditScore": (
-                    (X["Balance"] == 0) & (X["CreditScore"] < threshold)
-                ).astype(int)
-                for percentile, threshold in zip(
-                    self.percentiles, self.credit_score_percentile
-                )
-            }
-        )
+        X_copy = X.copy()
 
-        new_features.update(
-            {
-                f"IsMultiProductHighBalance_{num_products}": (
-                    (X["NumOfProducts"] > num_products) & (X["Balance"] > 50_000)
-                ).astype(int)
-                for num_products in self.num_products
-            }
-        )
+        # bins = [0, 35, 50, 100]
+        # labels = ["Jeune", "Adulte", "Senior"]
 
-        new_features.update(
-            {
-                f"IsHighBalance_{percentile}": (X["Balance"] > threshold).astype(int)
-                for percentile, threshold in zip(
-                    self.percentiles, self.balance_percentile
-                )
-            }
-        )
+        new_features = {
+            # "NumOfProducts_by_Age": X_copy.NumOfProducts / (1 + X_copy.Age),
+            "Balance_by_NumOfProducts": X_copy.Balance / (1 + X_copy.NumOfProducts),
+            "NumOfProducts^2": X_copy.NumOfProducts**2,
+            "Age_x_IsActiveMember": X_copy.Age / (1 + X_copy.IsActiveMember),
+            "Is_Germany": X_copy.Geography == "Germany",
+            "Has_Balance": X_copy.Balance == 0,
+            "Germany_Inactive_HighBalance": (X_copy.Geography == "Germany")
+            & (X_copy.IsActiveMember == 0)
+            & (X_copy.Balance > 0).astype(int),
+            # "AgeGroup": pd.cut(
+            #     X_copy["Age"], bins=bins, labels=labels, right=False
+            # ).astype(str),
+        }
 
-        new_features.update(
-            {
-                f"IsYounghighCreditScore_{age}y": (X["Age"] < age).astype(int)
-                for age in self.ages
-            }
-        )
-        new_features.update(
-            {
-                f"Balance_x_Germany": X["Balance"]
-                * (X["Geography"] == "Germany").astype(int)
-            }
-        )
-        new_features.update({f"HasBalance": (X["Balance"] > 0).astype(int)})
-
-        # Retourner un DataFrame avec les nouvelles colonnes
-        return pd.DataFrame(new_features, index=X.index)
+        return pd.DataFrame(new_features, index=X_copy.index)
