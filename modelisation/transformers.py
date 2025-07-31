@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import patsy
+from numpy import ndarray
 from scipy.optimize import minimize
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.metrics import f1_score
@@ -137,9 +139,14 @@ class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
         return pd.DataFrame({"churn_score": churn_scores}, index=X_out.index)
 
 
-class ChurnFeature(BaseEstimator, TransformerMixin):
+class ChurnFeature(TransformerMixin, BaseEstimator):
+    feature_names_in_: ndarray = ...
+    n_features_in_: int = ...
 
     def fit(self, X, y=None):
+        X_copy = X.copy()
+
+        self.grp = X_copy.groupby("Geography")["Balance"].transform("mean")
         return self
 
     def transform(self, X, y=None):
@@ -153,14 +160,69 @@ class ChurnFeature(BaseEstimator, TransformerMixin):
             "Balance_by_NumOfProducts": X_copy.Balance / (1 + X_copy.NumOfProducts),
             "NumOfProducts^2": X_copy.NumOfProducts**2,
             "Age_x_IsActiveMember": X_copy.Age / (1 + X_copy.IsActiveMember),
+            "Age_x_Balance": X_copy.Age * X_copy.Balance,
             "Is_Germany": X_copy.Geography == "Germany",
-            "Has_Balance": X_copy.Balance == 0,
             "Germany_Inactive_HighBalance": (X_copy.Geography == "Germany")
             & (X_copy.IsActiveMember == 0)
             & (X_copy.Balance > 0).astype(int),
-            # "AgeGroup": pd.cut(
-            #     X_copy["Age"], bins=bins, labels=labels, right=False
-            # ).astype(str),
+            "Balance_diff_Geography": X_copy.Balance - self.grp,
+            "Balance_ratio_Geography": X_copy.Balance / (1 + self.grp),
+            "Balance_by_EstimatedSalary": X_copy.Balance / (1 + X_copy.EstimatedSalary),
+            "EstimatedSalary_by_Age": X_copy.EstimatedSalary / (1 + X_copy.Age),
+            "Age_by_Tenure": X_copy.Age / (1 + X_copy.Tenure),
+            "NumOfProducts_by_Tenure": X_copy.NumOfProducts / (1 + X_copy.Tenure),
         }
 
         return pd.DataFrame(new_features, index=X_copy.index)
+
+
+class SplineTransformer(BaseEstimator, TransformerMixin):
+    """
+    Transformer scikit-learn pour générer des bases B-splines d'une variable continue.
+    Renvoie uniquement les colonnes spline générées.
+
+    Paramètres :
+      - feature_name (str) : nom de la colonne à transformer
+      - knots (tuple) : positions des nœuds internes
+      - degree (int) : degré du polynôme (généralement 3 pour cubique)
+      - include_intercept (bool) : inclure l'intercept dans la matrice de design
+      - prefix (str) : préfixe pour les noms de colonnes générées
+    """
+
+    def __init__(
+        self,
+        feature_name="Age",
+        knots=(30, 50, 70),
+        degree=3,
+        include_intercept=False,
+        prefix="spline",
+    ):
+        self.feature_name = feature_name
+        self.knots = knots
+        self.degree = degree
+        self.include_intercept = include_intercept
+        self.prefix = prefix
+
+    def fit(self, X, y=None):
+        # Pas d'apprentissage nécessaire
+        return self
+
+    def transform(self, X) -> pd.DataFrame:
+        # Attend un DataFrame pandas contenant feature_name
+        if self.feature_name not in X.columns:
+            raise ValueError(f"Colonne '{self.feature_name}' introuvable dans X")
+
+        # Construction de la matrice de design B-spline
+        spl = patsy.dmatrix(
+            f"bs({self.feature_name}, knots={self.knots}, degree={self.degree}, include_intercept={self.include_intercept})",
+            {self.feature_name: X[self.feature_name]},
+            return_type="dataframe",
+        )
+        # Renommer les colonnes pour éviter les conflits
+        spl.columns = [
+            f"{self.prefix}_{i}_{self.feature_name}" for i in range(spl.shape[1])
+        ]
+        spl.index = X.index
+
+        # Retourner uniquement les colonnes spline générées
+        return spl
