@@ -1,10 +1,59 @@
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 import patsy
 from numpy import ndarray
 from scipy.optimize import minimize
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.compose import ColumnTransformer
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, StandardScaler
 from sklearn.metrics import f1_score
+from sklearn.preprocessing import OrdinalEncoder
+from sklearn.tree import DecisionTreeClassifier
+
+
+class OutlierRemover(BaseEstimator, TransformerMixin):
+    def __init__(self, columns, method="iqr", factor=1.5):
+        self.columns = columns
+        self.method = method
+        self.factor = factor
+
+    def fit(self, X, y=None):
+        # On stocke les bornes par colonne
+        self.bounds_ = {}
+        for col in self.columns:
+            data = X[col]
+
+            if self.method == "iqr":
+                Q1 = np.nanpercentile(data, 25)
+                Q3 = np.nanpercentile(data, 75)
+                IQR = Q3 - Q1
+                lower = Q1 - self.factor * IQR
+                upper = Q3 + self.factor * IQR
+            elif self.method == "zscore":
+                mean = data.mean()
+                std = data.std()
+                lower = mean - self.factor * std
+                upper = mean + self.factor * std
+            else:
+                raise ValueError("Méthode inconnue : choisir 'iqr' ou 'zscore'")
+
+            self.bounds_[col] = (lower, upper)
+
+        return self
+
+    def transform(self, X, y=None):
+        # Création du masque
+        mask = pd.Series(True, index=X.index)
+        for col, (lower, upper) in self.bounds_.items():
+            mask &= X[col].between(lower, upper)
+
+        X_filtered = X[mask]
+        y_filtered = y[mask] if y is not None else None
+
+        # Si utilisé dans imblearn.Pipeline → retourne (X, y)
+        return (X_filtered, y_filtered) if y is not None else X_filtered
 
 
 class ChurnProbabilityScore(BaseEstimator, TransformerMixin):
@@ -156,12 +205,13 @@ class ChurnFeature(TransformerMixin, BaseEstimator):
         # labels = ["Jeune", "Adulte", "Senior"]
 
         new_features = {
+            "Is_Germany": X_copy.Geography
+            == "Germany",  # Le ratio churn est différent entre
             # "NumOfProducts_by_Age": X_copy.NumOfProducts / (1 + X_copy.Age),
             "Balance_by_NumOfProducts": X_copy.Balance / (1 + X_copy.NumOfProducts),
             "NumOfProducts^2": X_copy.NumOfProducts**2,
             "Age_x_IsActiveMember": X_copy.Age / (1 + X_copy.IsActiveMember),
             "Age_x_Balance": X_copy.Age * X_copy.Balance,
-            "Is_Germany": X_copy.Geography == "Germany",
             "Germany_Inactive_HighBalance": (X_copy.Geography == "Germany")
             & (X_copy.IsActiveMember == 0)
             & (X_copy.Balance > 0).astype(int),
@@ -226,3 +276,85 @@ class SplineTransformer(BaseEstimator, TransformerMixin):
 
         # Retourner uniquement les colonnes spline générées
         return spl
+
+
+class LdaScore(BaseEstimator, TransformerMixin):
+    """Produit 1 colonne : le score LDA (decision_function)."""
+
+    def __init__(self, num_cols, cat_cols, n_components=1):
+        self.num_cols = num_cols
+        self.cat_cols = cat_cols
+        self.n_components = n_components
+
+    def _make_prep(self):
+        return ColumnTransformer(
+            [
+                ("num", StandardScaler(), self.num_cols),
+                ("cat", OrdinalEncoder(), self.cat_cols),
+            ],
+            remainder="drop",
+        )
+
+    # ------------------------------------------------------------------
+    def fit(self, X, y):
+        self.prep_ = self._make_prep()
+        Xprep = self.prep_.fit_transform(X, y)
+        self.lda_ = LinearDiscriminantAnalysis(n_components=self.n_components)
+        self.lda_.fit(Xprep, y)
+        return self
+
+    # ------------------------------------------------------------------
+    def transform(self, X):
+        Xprep = self.prep_.transform(X)
+        scores = self.lda_.decision_function(Xprep).reshape(-1, 1)
+        return scores  # ndarray (n_samples, 1)
+
+    def get_feature_names_out(self, input_features=None):
+        return np.array(["score_lda"])
+
+
+class SupervisedBinner(BaseEstimator, TransformerMixin):
+    """
+    Coupe chaque variable numérique en intervalles optimisés pour la cible
+    (DecisionTreeClassifier 1-D → id de feuille).
+    """
+
+    def __init__(self, max_depth=3, min_samples_leaf=200, random_state=42):
+        self.max_depth = max_depth
+        self.min_samples_leaf = min_samples_leaf
+        self.random_state = random_state
+
+    # ------------------------------------------------------------------ #
+    def fit(self, X, y):
+        X = pd.DataFrame(X)  # garde les noms si dispo
+        self.features_ = X.columns.tolist()
+        self.trees_ = {}
+        self.bucket_maps_ = {}
+
+        for col in self.features_:
+            tree = DecisionTreeClassifier(
+                max_depth=self.max_depth,
+                min_samples_leaf=self.min_samples_leaf,
+                random_state=self.random_state,
+            ).fit(X[[col]], y)
+            self.trees_[col] = tree
+
+            # id de feuille → rang 0…n-1  (plus lisible)
+            leaves = tree.apply(X[[col]])
+            uniq = np.unique(leaves)
+            self.bucket_maps_[col] = {leaf: i for i, leaf in enumerate(uniq)}
+
+        return self
+
+    # ------------------------------------------------------------------ #
+    def transform(self, X):
+        X = pd.DataFrame(X, columns=self.features_)
+        out = {}
+        for col in self.features_:
+            leaf = self.trees_[col].apply(X[[col]])
+            out[f"{col}_bin_sup"] = np.vectorize(self.bucket_maps_[col].get)(leaf)
+        return pd.DataFrame(out).to_numpy()
+
+    # ------------------------------------------------------------------ #
+    def get_feature_names_out(self, input_features=None):
+        return np.array([f"{c}_bin_sup" for c in self.features_])
