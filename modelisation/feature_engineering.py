@@ -74,19 +74,24 @@ class ChurnCategories(BaseEstimator, TransformerMixin):
         )
         new_features["Tenure_Bin"] = pd.cut(
             X_copy["Tenure"],
-            [0, 2, 6, 100],
-            labels=["<2", "2-5", "6+"],
+            [0, 2, 3, 6, 100],
+            labels=["<2", "2", "3-5", "6+"],
         )
         new_features["NumOfProducts_Bin"] = pd.cut(
             X_copy["NumOfProducts"],
             [0, 2, 3, 100],
             labels=["<2", "2", "3+"],
         )
-        new_features["HighCreditLowProd"] = (
-            (X_copy["CreditScore"] > 700) & (X_copy["NumOfProducts"] == 1)
-        ).astype(int)
+
+        new_features["CreditScore_Bin"] = pd.cut(
+            X_copy["CreditScore"],
+            [350, 570, 650, 750, 900],
+            labels=["≤570", "570-650", "650-750", "750+"],
+        )
+
         new_features["Is_German"] = X_copy["Geography"] == "Germany"
         new_features["Gender"] = X_copy["Gender"]
+        new_features["IsActiveMember"] = X_copy["IsActiveMember"]
 
         df = pd.DataFrame(new_features, index=X_copy.index)
 
@@ -99,6 +104,7 @@ class ChurnCategories(BaseEstimator, TransformerMixin):
                         [
                             "Is_German",
                             "Gender",
+                            "IsActiveMember",
                             "Age_Bin",
                             "Tenure_Bin",
                             "NumOfProducts_Bin",
