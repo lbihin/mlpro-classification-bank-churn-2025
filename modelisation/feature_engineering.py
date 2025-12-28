@@ -89,12 +89,42 @@ class ChurnCategories(BaseEstimator, TransformerMixin):
         new_features["CreditScore_Bin"] = pd.cut(
             X_copy["CreditScore"],
             [350, 570, 650, 750, 900],
-            labels=["CreditScore_≤570", "CreditScore_570-650", "CreditScore_650-750", "CreditScore_750+"],
+            labels=[
+                "CreditScore_≤570",
+                "CreditScore_570-650",
+                "CreditScore_650-750",
+                "CreditScore_750+",
+            ],
         )
 
         new_features["Is_German"] = X_copy["Geography"] == "Germany"
         new_features["Gender"] = X_copy["Gender"]
         # new_features["IsActiveMember"] = X_copy["IsActiveMember"]
+
+        balance_bin = pd.cut(
+            X_copy["Balance"],
+            [-1, 0, 50_000, 100_000, 150_000, float("inf")],
+            labels=[
+                "Balance_≤0",
+                "Balance_0-50k",
+                "Balance_50k-100k",
+                "Balance_100k-150k",
+                "Balance_150k+",
+            ],
+            include_lowest=True,
+        )
+        # new_features["Balance_Bin"] = balance_bin
+
+        # 2) Interaction Tenure × Balance
+        new_features["Inter_Tenure_Balance"] = (
+            new_features["Tenure_Bin"].astype(str) + "_" + balance_bin.astype(str)
+        )
+
+        # 3) Interaction IsActiveMember × Tenure
+        is_active_str = X_copy["IsActiveMember"].map({0: "Inactive", 1: "Active"})
+        new_features["Inter_IsMember_Tenure"] = (
+            is_active_str.astype(str) + "_" + new_features["Tenure_Bin"].astype(str)
+        )
 
         df = pd.DataFrame(new_features, index=X_copy.index)
         return df
@@ -102,11 +132,13 @@ class ChurnCategories(BaseEstimator, TransformerMixin):
     def get_feature_names_out(self, input_features=None):
         return np.array(
             [
-                "Is_German",
-                "Gender_Male",
-                # "Age_Bin",
                 "Tenure_Bin",
                 "NumOfProducts_Bin",
                 "CreditScore_Bin",
+                "Is_German",
+                "Gender",
+                "Inter_Tenure_Balance",
+                "Inter_IsMember_Tenure",
+                # "Age_Bin",
             ]
         )

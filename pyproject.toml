@@ -32,6 +32,7 @@ ipykernel = "^6.29.5"
 black = {extras = ["jupyter"], version = "^25.1.0"}
 kaggle = "^1.7.4.5"
 tqdm = "^4.67.1"
+nbstripout = "^0.8.2"
 
 [build-system]
 requires = ["poetry-core"]
